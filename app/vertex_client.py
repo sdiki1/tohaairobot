@@ -8,6 +8,8 @@ from app.config import Settings
 
 
 class VertexClient:
+    MODEL_NAME = "gemini-2.5-flash"
+
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
 
@@ -51,22 +53,8 @@ class VertexClient:
         raise RuntimeError("Vertex API request failed for unknown reason")
 
     def _generate_urls(self) -> list[str]:
-        if self.settings.vertex_project:
-            model_path = (
-                f"projects/{self.settings.vertex_project}/"
-                f"locations/{self.settings.vertex_location}/"
-                f"publishers/google/models/{self.settings.vertex_model}"
-            )
-            return [
-                f"https://aiplatform.googleapis.com/v1/{model_path}:generateContent",
-                (
-                    f"https://{self.settings.vertex_location}-aiplatform.googleapis.com/"
-                    f"v1/{model_path}:generateContent"
-                ),
-            ]
-        else:
-            model_path = f"publishers/google/models/{self.settings.vertex_model}"
-            return [f"https://aiplatform.googleapis.com/v1/{model_path}:generateContent"]
+        model_path = f"publishers/google/models/{self.MODEL_NAME}"
+        return [f"https://aiplatform.googleapis.com/v1/{model_path}:generateContent"]
 
 
 def _extract_text(payload: dict[str, Any]) -> str:

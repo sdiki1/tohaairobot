@@ -15,7 +15,8 @@ cp .env.example .env
 - `BOT_TOKEN`
 - `GOOGLE_API_KEY`
 - `ADMIN_TOKEN`
-- при необходимости: `VERTEX_PROJECT`, `VERTEX_LOCATION`, `VERTEX_MODEL`
+
+Для модели используется один ключ: `GOOGLE_API_KEY`.
 
 ## 2. Локальный запуск (без Docker)
 
