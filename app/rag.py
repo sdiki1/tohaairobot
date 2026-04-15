@@ -70,28 +70,21 @@ class KnowledgeBase:
             rebuilt_at_utc=self._rebuilt_at_utc,
         )
 
-    async def ask(self, question: str, vertex_client: VertexClient) -> tuple[str, list[str]]:
+    async def ask(self, question: str, vertex_client: VertexClient) -> str:
         question = question.strip()
         if not question:
-            return "Напишите вопрос текстом.", []
+            return "Напишите вопрос текстом."
 
         chunks = self.search(question, self.top_k_chunks)
         if not chunks:
             return (
                 "Не нашел подходящих фрагментов в текущих файлах `attach`. "
-                "Добавьте документы или уточните формулировку вопроса.",
-                [],
+                "Добавьте документы или уточните формулировку вопроса."
             )
 
         prompt = self._build_prompt(question, chunks)
         answer = await vertex_client.generate(prompt)
-        sources: list[str] = []
-        seen: set[str] = set()
-        for item in chunks:
-            if item.file_name not in seen:
-                seen.add(item.file_name)
-                sources.append(item.file_name)
-        return answer.strip(), sources
+        return answer.strip()
 
     def search(self, query: str, top_k: int) -> list[RetrievedChunk]:
         tokens = _tokenize(query)
@@ -155,12 +148,21 @@ class KnowledgeBase:
 
         return (
             "Ты ассистент для сотрудников отеля. Отвечай только по данным из контекста.\n"
-            "Если в контексте нет точного ответа, честно скажи, что данных недостаточно.\n"
-            "Отвечай на русском языке, структурировано и без выдуманных фактов.\n\n"
+            "Не придумывай факты. Если данных недостаточно, явно так и напиши.\n"
+            "Ответ должен быть развернутым, подробным и практическим.\n"
+            "Минимум 8-12 содержательных пунктов, если вопрос это позволяет.\n"
+            "Пиши на русском языке.\n"
+            "Не добавляй блок 'Источники'.\n"
+            "Не упоминай названия файлов.\n"
+            "Используй HTML-разметку Telegram: <b>, <i>, <code>, <u>.\n"
+            "Не используй Markdown.\n"
+            "Структура ответа:\n"
+            "1) <b>Краткий вывод</b>\n"
+            "2) <b>Пошаговые действия</b>\n"
+            "3) <b>Исключения и риски</b>\n"
+            "4) <b>Что проверить дополнительно</b>\n\n"
             f"Вопрос пользователя:\n{question}\n\n"
-            f"Контекст из документов:\n{context}\n\n"
-            "Сначала дай основной ответ, затем короткий блок "
-            "'Что проверить дополнительно', если есть неопределенность."
+            f"Контекст из документов:\n{context}"
         )
 
 
@@ -182,4 +184,3 @@ def _compute_idf(chunks: list[Chunk]) -> dict[str, float]:
     for term, freq in doc_freq.items():
         idf[term] = math.log(1 + (total_docs - freq + 0.5) / (freq + 0.5))
     return idf
-
