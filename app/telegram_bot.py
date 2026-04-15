@@ -4,7 +4,9 @@ import contextlib
 from typing import Final
 
 from aiogram import Bot, Dispatcher, F
+from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ChatAction
+from aiogram.enums import ParseMode
 from aiogram.filters import Command
 from aiogram.types import Message
 
@@ -18,7 +20,10 @@ class SupportTelegramBot:
     def __init__(self, bot_token: str, kb: KnowledgeBase, vertex_client: VertexClient, public_base_url: str | None) -> None:
         self._kb = kb
         self._vertex_client = vertex_client
-        self._bot = Bot(token=bot_token)
+        self._bot = Bot(
+            token=bot_token,
+            default=DefaultBotProperties(parse_mode=ParseMode.HTML),
+        )
         self._dp = Dispatcher()
         self._public_base_url = public_base_url
         self._register_handlers()
@@ -34,15 +39,9 @@ class SupportTelegramBot:
     def _register_handlers(self) -> None:
         @self._dp.message(Command("start"))
         async def start_handler(message: Message) -> None:
-            admin_hint = ""
-            if self._public_base_url:
-                admin_hint = (
-                    f"\n\nАдмин-панель: {self._public_base_url.rstrip('/')}/admin"
-                )
             await message.answer(
                 "Я бот-консультант по документам из папки attach.\n"
                 "Просто напишите вопрос, и я отвечу по найденным инструкциям."
-                f"{admin_hint}"
             )
 
         @self._dp.message(Command("help"))
@@ -63,7 +62,7 @@ class SupportTelegramBot:
 
             await self._bot.send_chat_action(chat_id=message.chat.id, action=ChatAction.TYPING)
             try:
-                answer, sources = await self._kb.ask(question=question, vertex_client=self._vertex_client)
+                answer = await self._kb.ask(question=question, vertex_client=self._vertex_client)
             except Exception as exc:
                 await message.answer(
                     "Ошибка при обращении к модели Vertex AI. "
@@ -71,12 +70,11 @@ class SupportTelegramBot:
                 )
                 return
 
-            if sources:
-                source_block = "\n".join(f"- {name}" for name in sources)
-                answer = f"{answer}\n\nИсточники:\n{source_block}"
-
             for part in _split_message(answer, TELEGRAM_MESSAGE_LIMIT):
-                await message.answer(part)
+                try:
+                    await message.answer(part)
+                except Exception:
+                    await message.answer(_strip_html(part), parse_mode=None)
 
         @self._dp.message()
         async def fallback_handler(message: Message) -> None:
@@ -107,3 +105,17 @@ def _split_message(text: str, limit: int) -> list[str]:
         chunks.append(current.rstrip())
     return chunks
 
+
+def _strip_html(text: str) -> str:
+    return (
+        text.replace("<b>", "")
+        .replace("</b>", "")
+        .replace("<i>", "")
+        .replace("</i>", "")
+        .replace("<u>", "")
+        .replace("</u>", "")
+        .replace("<code>", "")
+        .replace("</code>", "")
+        .replace("<pre>", "")
+        .replace("</pre>", "")
+    )
