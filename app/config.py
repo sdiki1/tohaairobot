@@ -19,6 +19,9 @@ def _as_bool(value: str | None, default: bool = False) -> bool:
 class Settings:
     bot_token: str
     google_api_key: str
+    vertex_project: str | None
+    vertex_location: str
+    vertex_model: str
     attach_dir: Path
     admin_host: str
     admin_port: int
@@ -52,6 +55,9 @@ def load_settings() -> Settings:
     return Settings(
         bot_token=bot_token,
         google_api_key=google_api_key,
+        vertex_project=(os.getenv("VERTEX_PROJECT") or "").strip() or None,
+        vertex_location=(os.getenv("VERTEX_LOCATION") or "us-central1").strip(),
+        vertex_model=(os.getenv("VERTEX_MODEL") or "gemini-2.5-flash").strip(),
         attach_dir=attach_dir,
         admin_host=(os.getenv("ADMIN_HOST") or "0.0.0.0").strip(),
         admin_port=int(os.getenv("ADMIN_PORT") or "8080"),

@@ -15,8 +15,9 @@ cp .env.example .env
 - `BOT_TOKEN`
 - `GOOGLE_API_KEY`
 - `ADMIN_TOKEN`
-
-Для модели используется один ключ: `GOOGLE_API_KEY`.
+- `VERTEX_PROJECT` (ID проекта GCP)
+- `VERTEX_LOCATION` (например, `us-central1`)
+- `VERTEX_MODEL` (например, `gemini-2.5-flash`)
 
 ## 2. Локальный запуск (без Docker)
 
