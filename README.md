@@ -3,7 +3,7 @@
 Проект поднимает:
 - Telegram-бота на `aiogram`.
 - Админ-панель на `FastAPI` для управления файлами в `attach` (добавление/удаление + переиндексация).
-- Интеграцию с Vertex AI через `GOOGLE_API_KEY`.
+- Интеграцию с Vertex AI через `GOOGLE_CLOUD_API_KEY`.
 
 ## 1. Настройка
 
@@ -13,11 +13,15 @@ cp .env.example .env
 ```
 2. Заполните обязательные значения в `.env`:
 - `BOT_TOKEN`
-- `GOOGLE_API_KEY`
+- `GOOGLE_CLOUD_API_KEY`
 - `ADMIN_TOKEN`
+- `VERTEX_MODEL` (например, `gemini-2.5-flash`)
+
+Опционально:
 - `VERTEX_PROJECT` (ID проекта GCP)
 - `VERTEX_LOCATION` (например, `us-central1`)
-- `VERTEX_MODEL` (например, `gemini-2.5-flash`)
+
+Совместимость: если у вас уже используется `GOOGLE_API_KEY`, он тоже будет принят.
 
 ## 2. Локальный запуск (без Docker)
 

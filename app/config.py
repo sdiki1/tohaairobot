@@ -39,13 +39,16 @@ class Settings:
 
 def load_settings() -> Settings:
     bot_token = os.getenv("BOT_TOKEN", "").strip()
-    google_api_key = os.getenv("GOOGLE_API_KEY", "").strip()
+    google_api_key = (
+        os.getenv("GOOGLE_CLOUD_API_KEY", "").strip()
+        or os.getenv("GOOGLE_API_KEY", "").strip()
+    )
     admin_token = os.getenv("ADMIN_TOKEN", "").strip()
 
     if not bot_token:
         raise RuntimeError("BOT_TOKEN is required")
     if not google_api_key:
-        raise RuntimeError("GOOGLE_API_KEY is required")
+        raise RuntimeError("GOOGLE_CLOUD_API_KEY (or GOOGLE_API_KEY) is required")
     if not admin_token and not _as_bool(os.getenv("ALLOW_UNAUTHORIZED_ADMIN"), False):
         raise RuntimeError(
             "ADMIN_TOKEN is required unless ALLOW_UNAUTHORIZED_ADMIN=true (not recommended)"
@@ -66,8 +69,8 @@ def load_settings() -> Settings:
         chunk_size=int(os.getenv("CHUNK_SIZE") or "1400"),
         chunk_overlap=int(os.getenv("CHUNK_OVERLAP") or "250"),
         request_timeout_seconds=int(os.getenv("REQUEST_TIMEOUT_SECONDS") or "60"),
-        model_max_output_tokens=int(os.getenv("MODEL_MAX_OUTPUT_TOKENS") or "1024"),
-        model_temperature=float(os.getenv("MODEL_TEMPERATURE") or "0.2"),
+        model_max_output_tokens=int(os.getenv("MODEL_MAX_OUTPUT_TOKENS") or "65535"),
+        model_temperature=float(os.getenv("MODEL_TEMPERATURE") or "1"),
         log_level=(os.getenv("LOG_LEVEL") or "info").strip().lower(),
         public_base_url=(os.getenv("PUBLIC_BASE_URL") or "").strip() or None,
         allow_unauthorized_admin=_as_bool(os.getenv("ALLOW_UNAUTHORIZED_ADMIN"), False),
